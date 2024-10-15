@@ -1,0 +1,43 @@
+{
+    "root": true,
+    "env": {
+      "browser": true,
+      "node": true,
+      "es2021": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "plugin:react/recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:prettier/recommended",
+      "plugin:next/core-web-vitals"  // Specific to Next.js
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaVersion": 12,
+      "sourceType": "module",
+      "ecmaFeatures": {
+        "jsx": true
+      }
+    },
+    "plugins": ["react", "@typescript-eslint", "prettier"],
+    "rules": {
+      "prettier/prettier": "error",  // Ensures ESLint reports Prettier issues
+      "@typescript-eslint/no-unused-vars": ["warn"],
+      "react/prop-types": "off"      // Disable PropTypes if using TypeScript
+    },
+    "settings": {
+      "react": {
+        "version": "detect"
+      }
+    },
+    "overrides": [
+      {
+        "files": ["*.ts", "*.tsx"],
+        "rules": {
+          "@typescript-eslint/explicit-module-boundary-types": "off"
+        }
+      }
+    ]
+  }
+  
