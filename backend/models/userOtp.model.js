@@ -1,7 +1,11 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
-export const USER_OTP_TYPE = ["emailVerification", "passwordReset", "forgotPassword"];
+export const USER_OTP_TYPE = {
+    EMAIL_VERIFICATION: "emailVerification",
+    PASSWORD_RESET: "passwordReset",
+    FORGOT_PASSWORD: "forgotPassword",
+};
 
 const OTP_EXPIRY = 10 * 60 * 1000;
 
@@ -25,7 +29,11 @@ const userOtpSchema = new mongoose.Schema(
         },
         otpType: {
             type: String,
-            enum: USER_OTP_TYPE,
+            enum: [
+                USER_OTP_TYPE.EMAIL_VERIFICATION,
+                USER_OTP_TYPE.PASSWORD_RESET,
+                USER_OTP_TYPE.FORGOT_PASSWORD,
+            ],
             required: true,
         },
     },
