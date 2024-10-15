@@ -2,6 +2,7 @@
     "name": "darshan-tube",
     "version": "1.0.0",
     "description": "Darshan Tube",
+    "type": "module",
     "private": true,
     "scripts": {
         "dev:frontend": "cd frontend && npm run dev",
