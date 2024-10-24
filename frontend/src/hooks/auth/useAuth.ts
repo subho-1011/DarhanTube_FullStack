@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppDispatch, useAppSelector } from "@/lib/utils";
-import { TLoginFormSchema } from "@@/shared/validators";
+import { TLoginFormSchema } from "@/validators";
 import { login, getMe, logout, refreshToken } from "@/redux/thunkApi/userThunkApi";
 import { useMemo } from "react";
 

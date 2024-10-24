@@ -6,8 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerUser } from "@/services/auth.services";
 
-import { TRegisterFormSchema } from "@@/shared/validators";
-import { RegisterFormSchema } from "@@/shared/validators/userValidations";
+import { TRegisterFormSchema } from "@/validators";
+import { RegisterFormSchema } from "@/validators/userValidations";
 
 export const useRegisterForm = () => {
     const router = useRouter();

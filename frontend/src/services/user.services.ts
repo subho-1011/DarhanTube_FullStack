@@ -1,6 +1,6 @@
 import { IProfileResponse } from "@/types";
 import { axiosAuthInstance, axiosErrorHandler } from "@/utils/axios";
-import { TEditProfileFormSchema } from "@@/shared/validators";
+import { TEditProfileFormSchema } from "@/validators";
 
 // get current user
 const getCurrentUser = async () => {

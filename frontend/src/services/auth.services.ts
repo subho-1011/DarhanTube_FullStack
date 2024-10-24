@@ -1,8 +1,4 @@
-import {
-    TEmailVerificationFormSchema,
-    TLoginFormSchema,
-    TRegisterFormSchema,
-} from "@@/shared/validators";
+import { TEmailVerificationFormSchema, TLoginFormSchema, TRegisterFormSchema } from "@/validators";
 import { axiosAuthInstance, axiosErrorHandler } from "@/utils/axios";
 import axios from "axios";
 

@@ -14,8 +14,8 @@ import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { updateProfileData } from "@/redux/slices/profileSlice";
-import { TEditProfileFormSchema } from "@@/shared/validators";
-import { EditProfileFormSchema } from "@@/shared/validators/profileValidations";
+import { TEditProfileFormSchema } from "@/validators";
+import { EditProfileFormSchema } from "@/validators/profileValidations";
 import { getCurrentUserProfile, updateProfile } from "@/services/user.services";
 
 export const useProfileCard = () => {

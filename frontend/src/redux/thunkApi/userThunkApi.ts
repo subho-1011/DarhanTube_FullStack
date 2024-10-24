@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { TLoginFormSchema } from "@@/shared/validators";
+import { TLoginFormSchema } from "@/validators";
 import { getCurrentUser } from "@/services/user.services";
 import { loginUser, logoutUser, refreshTokenUser } from "@/services/auth.services";
 

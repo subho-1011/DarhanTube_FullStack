@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { TEmailVerificationFormSchema } from "@@/shared/validators";
-import { EmailVerificationFormSchema } from "@@/shared/validators/userValidations";
+import { TEmailVerificationFormSchema } from "@/validators";
+import { EmailVerificationFormSchema } from "@/validators/userValidations";
 import { sendEmailVerificationOtp, verifyEmailByOtp } from "@/services/auth.services";
 
 export const useEmailVerificationForm = () => {

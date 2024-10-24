@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { TLoginFormSchema } from "@@/shared/validators";
-import { LoginFormSchema } from "@@/shared/validators/userValidations";
+import { TLoginFormSchema } from "@/validators";
+import { LoginFormSchema } from "@/validators/userValidations";
 
 import { useAuth } from "./useAuth";
 import { useAppSelector } from "@/lib/utils";
