@@ -12,29 +12,43 @@ const PasswordFormat = z
         "Password must contain one special character required"
     );
 
-export const LoginFormSchema = z.object({
+const LoginFormSchema = z.object({
     email: z.string().email(),
     password: z.string().min(1, "Password is required"),
 });
 
-export const RegisterFormSchema = z.object({
+const RegisterFormSchema = z.object({
     name: z.string().min(1, "Name is required"),
     username: z.string().min(1, "Username is required"),
     email: z.string().email(),
     password: PasswordFormat,
 });
 
-export const ForgotPasswordFormSchema = z.object({
+const EmailVerificationFormSchema = z.object({
+    email: z.string().email(),
+    otpCode: z.string().min(6, "OTP code is required"),
+});
+
+const ForgotPasswordFormSchema = z.object({
     email: z.string().email(),
 });
 
-export const ResetPasswordFormSchema = z.object({
+const ResetPasswordFormSchema = z.object({
     password: z.string().min(1, "Password is required"),
     confirmPassword: z.string().min(1, "Confirm Password is required"),
 });
 
-export const ChangePasswordFormSchema = z.object({
+const ChangePasswordFormSchema = z.object({
     oldPassword: z.string().min(1, "Old Password is required"),
     newPassword: PasswordFormat,
     confirmPassword: z.string().min(1, "Confirm Password is required"),
 });
+
+export {
+    LoginFormSchema,
+    RegisterFormSchema,
+    EmailVerificationFormSchema,
+    ForgotPasswordFormSchema,
+    ResetPasswordFormSchema,
+    ChangePasswordFormSchema,
+};
