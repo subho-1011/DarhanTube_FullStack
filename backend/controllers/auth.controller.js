@@ -1,12 +1,12 @@
 import jwt from "jsonwebtoken";
 
 import User from "../models/user.model.js";
-import UserOtp, { USER_OTP_TYPE } from "../models/userOtp.model.js";
 
 import {
     LoginFormSchema,
     RegisterFormSchema,
     ChangePasswordFormSchema,
+    EmailVerificationFormSchema,
 } from "../../shared/validators/userValidations.js";
 import {
     ApiErrorResponse,
@@ -20,6 +20,10 @@ import {
     passwordResetMail,
 } from "../utils/sendEmail.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import Profile from "../models/profile.model.js";
+import UserSettings from "../models/userSettings.model.js";
+import { generateOtp, verifyOtp } from "../utils/otp.js";
+import { VerifyEmailOtp, ResetPasswordOtp, ForgotPasswordOtp } from "../models/userOtp.model.js";
 
 // register user
 const registerUser = asyncHandler(async (req, res) => {
@@ -39,16 +43,17 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const newUser = await User.create({ name, username, email, password });
 
-    const userEmailVerificationOtp = new UserOtp({
-        email,
-        otpType: USER_OTP_TYPE.EMAIL_VERIFICATION,
-    });
-    const otpCode = await userEmailVerificationOtp.generateOtpCode();
-    await userEmailVerificationOtp.save();
+    const { otp, hashedOtp } = await generateOtp();
 
-    await emailVerificationMail(email, otpCode);
+    await VerifyEmailOtp.create({ email, otp: hashedOtp });
+    await emailVerificationMail(email, otp);
 
-    return res.status(201).json(new ApiSuccessResponse(201, "User created successfully", newUser));
+    res.status(201).json(
+        new ApiSuccessResponse(201, "User created successfully", { user: newUser.toJSON() })
+    );
+
+    await Profile.create({ owner: newUser._id, firstName: name.split(" ")[0] });
+    await UserSettings.create({ owner: newUser._id });
 });
 
 // login user
@@ -85,7 +90,7 @@ const loginUserByEmail = asyncHandler(async (req, res) => {
         .status(200)
         .cookie("accessToken", accessToken, cookieOptions)
         .cookie("refreshToken", refreshToken, cookieOptions)
-        .json(new ApiSuccessResponse(200, { user: user.toJSON() }, "Login successful"));
+        .json(new ApiSuccessResponse(200, "Login successful", { user: user.toJSON() }));
 });
 
 // logout user
@@ -142,14 +147,18 @@ const refreshToken = asyncHandler(async (req, res) => {
     }
 
     const newAccessToken = user.generateAccessToken();
+    const newRefreshToken = user.generateRefreshToken();
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
 
     return res
         .status(200)
-        .cookie("accessToken", newAccessToken, {
-            httpOnly: true,
-            secure: true,
-        })
-        .json(new ApiSuccessResponse(200, "Refresh token successful"));
+        .cookie("accessToken", newAccessToken, options)
+        .cookie("refreshToken", newRefreshToken, options)
+        .json(new ApiSuccessResponse(200, "Refresh token successful", { user: user.toJSON() }));
 });
 
 // verify access token
@@ -200,7 +209,7 @@ const changePasswordByOldPassword = asyncHandler(async (req, res) => {
 
 // email verification by otp
 const verifyEmailByOtp = asyncHandler(async (req, res) => {
-    const { email, otpCode } = otpSchema.parse(req.body);
+    const { email, otpCode } = EmailVerificationFormSchema.parse(req.body);
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -211,12 +220,9 @@ const verifyEmailByOtp = asyncHandler(async (req, res) => {
         throw new ApiErrorResponse(400, "Email already verified");
     }
 
-    const userOtp = await UserOtp.findOne({ email, otpType: USER_OTP_TYPE.EMAIL_VERIFICATION });
-    if (!userOtp) {
-        throw new ApiErrorResponse(400, "Invalid OTP code");
-    }
+    const existingUserOtp = await VerifyEmailOtp.findOne({ email });
 
-    const isOtpCodeMatch = await userOtp.verifyOtpCode(otpCode);
+    const isOtpCodeMatch = await verifyOtp(otpCode, existingUserOtp.otp);
     if (!isOtpCodeMatch) {
         throw new ApiErrorResponse(400, "Invalid OTP code");
     }
@@ -224,54 +230,35 @@ const verifyEmailByOtp = asyncHandler(async (req, res) => {
     user.isVerified = true;
     await user.save({ validateBeforeSave: false });
 
-    await UserOtp.deleteOne({ _id: userOtp._id });
+    res.status(200).json(new ApiSuccessResponse(200, "Email verified successfully"));
+    await VerifyEmailOtp.deleteOne({ _id: existingUserOtp._id });
 
-    return res.status(200).json(new ApiSuccessResponse(200, "Email verified successfully"));
+    return;
 });
 
 // resend otp
-const resendOtp = asyncHandler(async (req, res) => {
+const sendEmailVerificationOtp = asyncHandler(async (req, res) => {
     const { email } = req.body;
-    const otpType = req.params.otpType;
-
-    if (!email) {
-        throw new ApiErrorResponse(400, "Email is required");
-    }
-
-    if (!otpType || !Object.values(USER_OTP_TYPE).includes(otpType)) {
-        throw new ApiErrorResponse(400, "Invalid OTP type provided when resending OTP");
-    }
 
     const user = await User.findOne({ email });
-
     if (!user) {
-        throw new ApiErrorResponse(404, "User not found while resending email");
+        throw new ApiErrorResponse(404, "User not found");
     }
 
-    await UserOtp.findOneAndDelete({ email, otpType });
-
-    const newOtp = new UserOtp({ email, otpType });
-    const otpCode = await newOtp.generateOtpCode();
-    await newOtp.save();
-
-    switch (otpType) {
-        case USER_OTP_TYPE.EMAIL_VERIFICATION:
-            await emailVerificationMail(email, otpCode);
-            break;
-
-        case USER_OTP_TYPE.PASSWORD_RESET:
-            await passwordResetMail(email, otpCode);
-            break;
-
-        case USER_OTP_TYPE.FORGOT_PASSWORD:
-            await forgotPasswordMail(email, otpCode);
-            break;
-
-        default:
-            throw new ApiErrorResponse(400, "Invalid OTP type provided when resending OTP");
+    if (user.isVerified) {
+        throw new ApiErrorResponse(400, "Email already verified");
     }
 
-    return res.status(201).json(new ApiSuccessResponse(201, "OTP resended successfully"));
+    const existingUserOtp = await VerifyEmailOtp.findOne({ email });
+    if (existingUserOtp) {
+        await VerifyEmailOtp.deleteOne({ _id: existingUserOtp._id });
+    }
+
+    const { otp, hashedOtp } = generateOtp();
+    await VerifyEmailOtp.create({ email, otp: hashedOtp });
+    await emailVerificationMail(email, otp);
+
+    return res.status(201).json(new ApiSuccessResponse(201, "OTP sent successfully"));
 });
 
 // TODO: forgot password
@@ -286,5 +273,5 @@ export {
     verifyAccessToken,
     changePasswordByOldPassword,
     verifyEmailByOtp,
-    resendOtp,
+    sendEmailVerificationOtp,
 };
