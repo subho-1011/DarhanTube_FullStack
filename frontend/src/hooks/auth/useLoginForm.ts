@@ -65,16 +65,11 @@ export const useLoginForm = () => {
     };
 
     useEffect(() => {
-        const delayedErrorReset = debounce(() => {
+        if (form.watch("password") && form.watch("email")) {
             setError("");
             setSuccess("");
-        }, 500);
+        }
 
-        delayedErrorReset();
-
-        return () => {
-            delayedErrorReset.cancel();
-        };
     }, [form.watch("password"), form.watch("email")]);
 
     return {
