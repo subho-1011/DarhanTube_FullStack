@@ -1,25 +1,26 @@
 class ApiSuccessResponse {
-    constructor(statusCode, message, data = undefined, success = true) {
-        this.statusCode = statusCode;
+    constructor(status, message, data = undefined, success = true) {
+        this.status = status;
         this.message = message;
         this.data = data;
         this.success = success;
     }
 }
 
-class ApiReridectResponse extends ApiSuccessResponse {
-    constructor(statusCode, message, url) {
-        super(statusCode, message);
+class ApiReridectResponse {
+    constructor(status, message, url) {
+        this.status = status;
+        this.message = message;
         this.url = url;
     }
 }
 
 class ApiErrorResponse {
-    constructor(statusCode, message, errors = null, stack = null, success = false) {
+    constructor(status, message, errors = null, stack = null, success = false) {
         // super(message);
 
         this.message = message;
-        this.statusCode = statusCode;
+        this.status = status;
         this.success = success;
         if (errors) {
             this.errors = errors;

@@ -1,7 +1,14 @@
-import fs from 'fs';
-import { UploadApiResponse } from 'cloudinary';
-import cloudinary from '../config/cloudinaryConfig.js';
-import { VIDEO_QUALITY_ENUM_VALUES, VIDEO_QUALITY_ENUM } from '../models/video.model.js';
+import fs from "fs";
+import { VIDEO_QUALITY_ENUM_VALUES, VIDEO_QUALITY_ENUM } from "../models/video.model.js";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export const ROOT_FOLDER = "darshanTube";
 
 export const cloudinaryVideoHtmlExtract = (html) => {
     const posterRegex = /poster='([^']+)'/;
@@ -27,21 +34,21 @@ export const cloudinaryVideoHtmlExtract = (html) => {
  * Uploads a local image to cloudinary and returns the response
  * @param {string} localFilePath - The path of the local image
  * @param {string} folder - The folder to upload image to
- * @returns {Promise<{res :UploadApiResponse}>} The response from cloudinary
+//  * @returns {Promise<{res :UploadApiResponse}>} The response from cloudinary
  */
 const uploadImageOnCloudinary = async (localFilePath, folder) => {
     try {
         if (!localFilePath) return null;
 
         const response = await cloudinary.uploader.upload(localFilePath, {
-            folder,
-            resource_type: 'image',
+            folder: `${ROOT_FOLDER}/${folder}`,
+            resource_type: "image",
         });
 
         fs.unlinkSync(localFilePath);
         return response;
     } catch (error) {
-        console.error('Error uploading image to cloudinary:', error);
+        console.error("Error uploading image to cloudinary:", error);
         fs.unlinkSync(localFilePath);
         return null;
     }
@@ -59,8 +66,8 @@ const uploadVideoOnCloudinary = async (localFilePath, folder) => {
         if (!localFilePath) return null;
 
         const response = await cloudinary.uploader.upload(localFilePath, {
-            folder,
-            resource_type: 'video',
+            folder: `${ROOT_FOLDER}/${folder}`,
+            resource_type: "video",
         });
 
         let videoDatas = {};
@@ -96,16 +103,19 @@ const deleteImageToCloudinary = async (cloudinaryFilePath) => {
     try {
         if (!cloudinaryFilePath) return null;
 
-        const filePath = cloudinaryFilePath.split('/');
-        const fileName = filePath[filePath.length - 1].split('.')[0];
+        const public_id = (ROOT_FOLDER + cloudinaryFilePath.split(ROOT_FOLDER)[1]).split(".")[0];
 
-        return await cloudinary.uploader.destroy(fileName, { resource_type: 'image' }, (err, _) => {
-            if (err) {
-                console.error('Error deleting file:', err);
+        return await cloudinary.uploader.destroy(
+            public_id,
+            { resource_type: "image" },
+            (err, _) => {
+                if (err) {
+                    console.error("Error deleting file:", err);
+                }
             }
-        });
+        );
     } catch (e) {
-        console.log('Error deleting cloudinary file: ' + e.message);
+        console.log("Error deleting cloudinary file: " + e.message);
     }
 };
 
@@ -118,16 +128,19 @@ const deleteVideoToCloudinary = async (cloudinaryFilePath) => {
     try {
         if (!cloudinaryFilePath) return null;
 
-        const filePath = cloudinaryFilePath.split('/');
-        const fileName = filePath[filePath.length - 1].split('.')[0];
+        const public_id = ROOT_FOLDER + cloudinaryFilePath.split(ROOT_FOLDER)[1];
 
-        return await cloudinary.uploader.destroy(fileName, { resource_type: 'video' }, (err, _) => {
-            if (err) {
-                console.error('Error deleting file:', err);
+        return await cloudinary.uploader.destroy(
+            public_id,
+            { resource_type: "video" },
+            (err, _) => {
+                if (err) {
+                    console.error("Error deleting file:", err);
+                }
             }
-        });
+        );
     } catch (e) {
-        console.log('Error deleting cloudinary file: ' + e.message);
+        console.log("Error deleting cloudinary file: " + e.message);
     }
 };
 
@@ -136,4 +149,5 @@ export {
     uploadVideoOnCloudinary,
     deleteImageToCloudinary,
     deleteVideoToCloudinary,
+    cloudinary,
 };
