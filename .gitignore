@@ -38,3 +38,6 @@ next-env.d.ts
 .gitkeep
 backend/.env
 frontend/next.config.mjs
+frontend/next.config.mjs
+
+frontend/.next
