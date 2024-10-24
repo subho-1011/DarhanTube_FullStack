@@ -1,15 +1,8 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
-
-export const USER_OTP_TYPE = {
-    EMAIL_VERIFICATION: "emailVerification",
-    PASSWORD_RESET: "passwordReset",
-    FORGOT_PASSWORD: "forgotPassword",
-};
 
 const OTP_EXPIRY = 10 * 60 * 1000;
 
-const userOtpSchema = new mongoose.Schema(
+const verifyEmailOtpSchema = new mongoose.Schema(
     {
         email: {
             type: String,
@@ -18,7 +11,7 @@ const userOtpSchema = new mongoose.Schema(
             lowercase: true,
             match: [/\S+@\S+\.\S+/, "Please use a valid email address"],
         },
-        otpCode: {
+        otp: {
             type: String,
             required: true,
         },
@@ -27,48 +20,58 @@ const userOtpSchema = new mongoose.Schema(
             required: true,
             default: () => new Date(Date.now() + OTP_EXPIRY),
         },
-        otpType: {
+    },
+    { timestamps: true }
+);
+
+const resetPasswordOtpSchema = new mongoose.Schema(
+    {
+        email: {
             type: String,
-            enum: [
-                USER_OTP_TYPE.EMAIL_VERIFICATION,
-                USER_OTP_TYPE.PASSWORD_RESET,
-                USER_OTP_TYPE.FORGOT_PASSWORD,
-            ],
             required: true,
+            trim: true,
+            lowercase: true,
+            match: [/\S+@\S+\.\S+/, "Please use a valid email address"],
+        },
+        otp: {
+            type: String,
+            required: true,
+        },
+        expiresAt: {
+            type: Date,
+            required: true,
+            default: () => new Date(Date.now() + OTP_EXPIRY),
         },
     },
     { timestamps: true }
 );
 
-userOtpSchema.methods.generateOtpCode = async function () {
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+const forgotPasswordOtpSchema = new mongoose.Schema(
+    {
+        email: {
+            type: String,
+            required: true,
+            trim: true,
+            lowercase: true,
+            match: [/\S+@\S+\.\S+/, "Please use a valid email address"],
+        },
+        otp: {
+            type: String,
+            required: true,
+        },
+        expiresAt: {
+            type: Date,
+            required: true,
+            default: () => new Date(Date.now() + OTP_EXPIRY),
+        },
+    },
+    { timestamps: true }
+);
 
-    // Hash OTP code using bcrypt
-    const hashedOtpCode = await bcrypt.hash(otpCode, 10);
+const VerifyEmailOtp = mongoose.model("VerifyEmailOtp", verifyEmailOtpSchema);
 
-    // Set OTP and expiration time
-    this.otpCode = hashedOtpCode;
-    this.expiresAt = new Date(Date.now() + OTP_EXPIRY);
+const ResetPasswordOtp = mongoose.model("ResetPasswordOtp", resetPasswordOtpSchema);
 
-    return otpCode;
-};
+const ForgotPasswordOtp = mongoose.model("ForgotPasswordOtp", forgotPasswordOtpSchema);
 
-userOtpSchema.methods.verifyOtpCode = async function (otpCode) {
-    const isOtpMatch = await bcrypt.compare(otpCode, this.otpCode);
-
-    // Check if the OTP is valid
-    if (!isOtpMatch) {
-        throw new Error("Invalid OTP, please try again.");
-    }
-
-    // Check if the OTP has expired
-    if (this.expiresAt < Date.now()) {
-        throw new Error("OTP has expired.");
-    }
-
-    return true;
-};
-
-const UserOtp = mongoose.model("UserOtp", userOtpSchema);
-
-export default UserOtp;
+export { VerifyEmailOtp, ResetPasswordOtp, ForgotPasswordOtp };

@@ -7,6 +7,11 @@ const profileSchema = new Schema(
             ref: "User",
             required: true,
         },
+        username: {
+            type: String,
+            required: true,
+            ref: "User",
+        },
         firstName: {
             type: String,
             required: true,
@@ -16,7 +21,6 @@ const profileSchema = new Schema(
         },
         lastName: {
             type: String,
-            required: true,
             minlength: 3,
             maxlength: 20,
             trim: true,
@@ -25,26 +29,22 @@ const profileSchema = new Schema(
             type: String,
             maxlength: 200,
             trim: true,
+            default: "Hello, I'm using DarshanTube!",
         },
-        profileSchemaUrl: {
+        profileAvatarUrl: {
             type: String,
-            default: "https://via.placeholder.com/150",
         },
-        coverPictureUrl: {
+        coverImageUrl: {
             type: String,
         },
         websites: [
             {
-                name: String,
-                url: String,
+                type: String,
             },
         ],
-        socials: [
-            {
-                name: String,
-                url: String,
-            },
-        ],
+        socials: {
+            [String]: String,
+        },
         city: {
             type: String,
             maxlength: 20,

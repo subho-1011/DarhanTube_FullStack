@@ -1,6 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
-import { genarateUniqueSlug } from "../../utils/genarate-unique-slug.js";
 
 const videoDataSchema = new mongoose.Schema({
     _id: false,
@@ -103,44 +102,10 @@ const videoSchema = new Schema(
             required: true,
         },
     },
-    { timestamps: true },
-    {
-        toJSON: {
-            transform(doc, ret) {
-                ret.id = ret._id;
-                delete ret._id;
-                delete ret.__v;
-                delete ret.updatedAt;
-                delete ret.isPublic;
-                delete ret.owner.role;
-                delete ret.owner.email;
-                delete ret.owner.isVerified;
-                delete ret.owner.updatedAt;
-                delete ret.owner.createdAt;
-                delete ret.owner.password;
-                delete ret.owner.refreshToken;
-                delete ret.owner.__v;
-                return ret;
-            },
-        },
-    }
+    { timestamps: true }
 );
 
-// videoSchema.methods.toJSON = function () {
-//     const videoObject = this.toObject();
-//     delete videoObject.__v;
-//     delete videoObject.updatedAt;
-//     delete videoObject.isPublic;
-//     delete videoObject.owner.role;
-//     delete videoObject.owner.email;
-//     delete videoObject.owner.isVerified;
-//     delete videoObject.owner.updatedAt;
-//     delete videoObject.owner.createdAt;
-//     delete videoObject.owner.password;
-//     delete videoObject.owner.refreshToken;
-//     delete videoObject.owner.__v;
-//     return videoObject;
-// };
+
 
 videoSchema.index({ slug: 1, owner: 1 }, { unique: true });
 
